@@ -1,227 +1,241 @@
-import { Prospect, ProspectStatus, Platform } from '../types';
+// src/services/prospectService.ts
+import { initializeApp, cert } from 'firebase-admin/app';
+import {
+  getFirestore,
+  FieldValue,
+  DocumentData,
+  QuerySnapshot
+} from 'firebase-admin/firestore';
+import {
+  Prospect,
+  FollowUp,
+  Quote,
+  ProspectStatus,
+  Platform
+} from '../types';
 
-interface MockProspect extends Prospect {
-  assignedTo?: string; // User ID
-}
+// ----------------------------------------------------------------------------
+// 1) Inicializa Firebase Admin con credenciales de entorno
+// ----------------------------------------------------------------------------
+const firebaseApp = initializeApp({
+  credential: cert({
+    projectId:   process.env.FIREBASE_PROJECT_ID!,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+    privateKey:  process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+  }),
+});
 
-class ProspectService {
-  private prospects: MockProspect[] = [];
-  private initialized = false;
+const db = getFirestore(firebaseApp);
+const collection = db.collection('prospects');
 
-  constructor() {
-    this.loadProspects();
-  }
+// ----------------------------------------------------------------------------
+// 2) Servicio
+// ----------------------------------------------------------------------------
+export const prospectService = {
+  /**
+   * Devuelve todos los prospectos
+   */
+  async getAllProspects(): Promise<Prospect[]> {
+    const snap: QuerySnapshot<DocumentData> = await collection.get();
+    return snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        fechaContacto: data.fechaContacto.toDate(),
+        ultimoSeguimiento: data.ultimoSeguimiento?.toDate(),
+        seguimientos: (data.seguimientos || []).map((f: any) => ({
+          ...f,
+          fecha: f.fecha.toDate()
+        })),
+        cotizaciones: (data.cotizaciones || []).map((q: any) => ({
+          ...q,
+          fecha: q.fecha.toDate()
+        })),
+      } as Prospect;
+    });
+  },
 
-  private loadProspects(): void {
-    if (this.initialized) return;
-    
-    const savedProspects = localStorage.getItem('crm-prospects');
-    if (savedProspects) {
-      try {
-        const parsed = JSON.parse(savedProspects);
-        this.prospects = parsed.map((prospect: any) => ({
-          ...prospect,
-          fechaContacto: new Date(prospect.fechaContacto),
-          ultimoSeguimiento: prospect.ultimoSeguimiento ? new Date(prospect.ultimoSeguimiento) : undefined,
-          seguimientos: prospect.seguimientos.map((seg: any) => ({
-            ...seg,
-            fecha: new Date(seg.fecha)
-          })),
-          cotizaciones: prospect.cotizaciones.map((cot: any) => ({
-            ...cot,
-            fecha: new Date(cot.fecha)
-          }))
-        }));
-      } catch (error) {
-        console.error('Error loading prospects:', error);
-        this.prospects = this.getDefaultProspects();
-      }
-    } else {
-      this.prospects = this.getDefaultProspects();
-    }
-    
-    this.initialized = true;
-    this.saveProspects();
-  }
-
-  private saveProspects(): void {
-    localStorage.setItem('crm-prospects', JSON.stringify(this.prospects));
-  }
-
-  private getDefaultProspects(): MockProspect[] {
-    return [
-      {
-        id: '1',
-        nombre: 'María García',
-        telefono: '+52 55 1234 5678',
-        correo: 'maria.garcia@empresa.com',
-        plataforma: 'WhatsApp',
-        servicioInteres: 'Chatbot WhatsApp',
-        fechaContacto: new Date('2024-01-15'),
-        estado: 'Nuevo',
-        responsable: '1', // Admin user ID
-        assignedTo: '1',
-        notasInternas: 'Interesada en automatización de atención al cliente',
-        seguimientos: [],
-        cotizaciones: []
-      },
-      {
-        id: '2',
-        nombre: 'Carlos López',
-        telefono: '+52 55 8765 4321',
-        correo: 'carlos.lopez@startup.com',
-        plataforma: 'Instagram',
-        servicioInteres: 'CRM personalizado',
-        fechaContacto: new Date('2024-01-20'),
-        estado: 'Contactado',
-        responsable: '2', // Demo user ID
-        assignedTo: '2',
-        notasInternas: 'Startup en crecimiento, necesita gestión de leads',
-        seguimientos: [
-          {
-            id: '1',
-            fecha: new Date('2024-01-21'),
-            usuario: 'Usuario Demo',
-            nota: 'Primera llamada realizada, muy interesado en el producto'
-          }
-        ],
-        cotizaciones: [],
-        ultimoSeguimiento: new Date('2024-01-21')
-      }
-    ];
-  }
-
-  async getAllProspects(): Promise<MockProspect[]> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return [...this.prospects];
-  }
-
-  async getProspectById(id: string): Promise<MockProspect | null> {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return this.prospects.find(prospect => prospect.id === id) || null;
-  }
-
-  async createProspect(prospectData: Omit<MockProspect, 'id' | 'seguimientos' | 'cotizaciones'>): Promise<MockProspect> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const newProspect: MockProspect = {
-      ...prospectData,
-      id: Date.now().toString(),
-      seguimientos: [],
-      cotizaciones: [],
-      assignedTo: prospectData.responsable // Set assignedTo to the same as responsable
+  /**
+   * Devuelve un prospecto por ID o null si no existe
+   */
+  async getProspectById(id: string): Promise<Prospect | null> {
+    const doc = await collection.doc(id).get();
+    if (!doc.exists) return null;
+    const data = doc.data() as any;
+    return {
+      id: doc.id,
+      ...data,
+      fechaContacto: data.fechaContacto.toDate(),
+      ultimoSeguimiento: data.ultimoSeguimiento?.toDate(),
+      seguimientos: (data.seguimientos || []).map((f: any) => ({
+        ...f,
+        fecha: f.fecha.toDate()
+      })),
+      cotizaciones: (data.cotizaciones || []).map((q: any) => ({
+        ...q,
+        fecha: q.fecha.toDate()
+      })),
     };
+  },
 
-    this.prospects.unshift(newProspect);
-    this.saveProspects();
-    return newProspect;
-  }
+  /**
+   * Crea un nuevo prospecto
+   */
+  async createProspect(data: Omit<Prospect, 'id' | 'seguimientos' | 'cotizaciones' | 'ultimoSeguimiento'>): Promise<Prospect> {
+    const now = new Date();
+    const docRef = await collection.add({
+      ...data,
+      fechaContacto:      FieldValue.serverTimestamp(),
+      seguimientos:       [],
+      cotizaciones:       [],
+      ultimoSeguimiento:  null,
+      createdAt:          FieldValue.serverTimestamp()
+    });
 
-  async updateProspect(id: string, updates: Partial<MockProspect>): Promise<MockProspect> {
-    await new Promise(resolve => setTimeout(resolve, 400));
+    // Lee de vuelta para devolverlo con ID y campos Date
+    const snap = await docRef.get();
+    const saved = snap.data() as any;
+    return {
+      id: snap.id,
+      ...data,
+      fechaContacto:     now,
+      seguimientos:      [],
+      cotizaciones:      [],
+      ultimoSeguimiento: undefined
+    };
+  },
 
-    const prospectIndex = this.prospects.findIndex(prospect => prospect.id === id);
-    if (prospectIndex === -1) {
-      throw new Error('Prospecto no encontrado');
-    }
+  /**
+   * Actualiza un prospecto existente
+   */
+  async updateProspect(id: string, updates: Partial<Prospect>): Promise<Prospect> {
+    const docRef = collection.doc(id);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) throw new Error('Prospecto no encontrado');
 
-    // If responsable is being updated, also update assignedTo
+    // Si actualizas responsable, sincroniza assignedTo
     if (updates.responsable) {
       updates.assignedTo = updates.responsable;
     }
 
-    const updatedProspect = {
-      ...this.prospects[prospectIndex],
-      ...updates
-    };
+    // Convierte Date a Timestamp
+    const payload: any = { ...updates };
+    if (updates.fechaContacto instanceof Date) {
+      payload.fechaContacto = FieldValue.serverTimestamp();
+    }
+    if (updates.ultimoSeguimiento instanceof Date) {
+      payload.ultimoSeguimiento = FieldValue.serverTimestamp();
+    }
+    await docRef.update(payload);
 
-    this.prospects[prospectIndex] = updatedProspect;
-    this.saveProspects();
-    return updatedProspect;
-  }
+    // Devuelve el documento actualizado
+    return this.getProspectById(id) as Promise<Prospect>;
+  },
 
+  /**
+   * Elimina un prospecto
+   */
   async deleteProspect(id: string): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await collection.doc(id).delete();
+  },
 
-    this.prospects = this.prospects.filter(prospect => prospect.id !== id);
-    this.saveProspects();
-  }
+  /**
+   * Asigna un prospecto a un usuario
+   */
+  async assignProspectToUser(prospectId: string, userId: string): Promise<Prospect> {
+    const docRef = collection.doc(prospectId);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) throw new Error('Prospecto no encontrado');
 
-  async assignProspectToUser(prospectId: string, userId: string): Promise<MockProspect> {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await docRef.update({
+      assignedTo: userId,
+      responsable: userId
+    });
 
-    const prospectIndex = this.prospects.findIndex(prospect => prospect.id === prospectId);
-    if (prospectIndex === -1) {
-      throw new Error('Prospecto no encontrado');
-    }
+    return this.getProspectById(prospectId) as Promise<Prospect>;
+  },
 
-    this.prospects[prospectIndex].assignedTo = userId;
-    this.prospects[prospectIndex].responsable = userId;
-    this.saveProspects();
-    
-    return this.prospects[prospectIndex];
-  }
+  /**
+   * Filtra prospectos por usuario asignado
+   */
+  async getProspectsByUser(userId: string): Promise<Prospect[]> {
+    const snap = await collection.where('assignedTo', '==', userId).get();
+    return snap.docs.map(doc => {
+      const data = doc.data() as any;
+      return {
+        id: doc.id,
+        ...data,
+        fechaContacto: data.fechaContacto.toDate(),
+        ultimoSeguimiento: data.ultimoSeguimiento?.toDate(),
+        seguimientos: (data.seguimientos || []).map((f: any) => ({
+          ...f,
+          fecha: f.fecha.toDate()
+        })),
+        cotizaciones: (data.cotizaciones || []).map((q: any) => ({
+          ...q,
+          fecha: q.fecha.toDate()
+        })),
+      };
+    });
+  },
 
-  async getProspectsByUser(userId: string): Promise<MockProspect[]> {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return this.prospects.filter(prospect => prospect.assignedTo === userId);
-  }
+  /**
+   * Agrega un follow-up a un prospecto
+   */
+  async addFollowUp(prospectId: string, nota: string, usuario: string = 'sistema'): Promise<Prospect> {
+    const docRef = collection.doc(prospectId);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) throw new Error('Prospecto no encontrado');
+    const data = docSnap.data() as any;
 
-  async addFollowUp(prospectId: string, note: string, userId: string = 'current-user'): Promise<MockProspect> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    const prospectIndex = this.prospects.findIndex(prospect => prospect.id === prospectId);
-    if (prospectIndex === -1) {
-      throw new Error('Prospecto no encontrado');
-    }
-
-    const newFollowUp = {
+    const nuevoSeguimiento: FollowUp = {
       id: Date.now().toString(),
       fecha: new Date(),
-      usuario: 'Usuario Actual', // In a real app, get from auth context
-      nota: note
+      usuario,
+      nota
     };
 
-    this.prospects[prospectIndex].seguimientos.unshift(newFollowUp);
-    this.prospects[prospectIndex].ultimoSeguimiento = new Date();
-    this.saveProspects();
+    const nuevos = [nuevoSeguimiento, ...(data.seguimientos || [])];
+    await docRef.update({
+      seguimientos: nuevos,
+      ultimoSeguimiento: FieldValue.serverTimestamp()
+    });
 
-    return this.prospects[prospectIndex];
-  }
+    return this.getProspectById(prospectId) as Promise<Prospect>;
+  },
 
+  /**
+   * Estadísticas de prospectos
+   */
   async getProspectsStats(): Promise<{
     total: number;
     byStatus: Record<ProspectStatus, number>;
     byPlatform: Record<Platform, number>;
     byUser: Record<string, number>;
   }> {
-    await new Promise(resolve => setTimeout(resolve, 200));
-
+    const all = await this.getAllProspects();
     const stats = {
-      total: this.prospects.length,
+      total: all.length,
       byStatus: {} as Record<ProspectStatus, number>,
       byPlatform: {} as Record<Platform, number>,
-      byUser: {} as Record<string, number>
+      byUser: {} as Record<string, number>,
     };
 
-    // Initialize counters
-    const statuses: ProspectStatus[] = ['Nuevo', 'Contactado', 'En seguimiento', 'Cotizado', 'Venta cerrada', 'Perdido'];
-    const platforms: Platform[] = ['WhatsApp', 'Instagram', 'Facebook'];
+    // Inicializa contadores
+    (['Nuevo','Contactado','En seguimiento','Cotizado','Venta cerrada','Perdido'] as ProspectStatus[])
+      .forEach(s => (stats.byStatus[s] = 0));
+    (['WhatsApp','Instagram','Facebook'] as Platform[])
+      .forEach(p => (stats.byPlatform[p] = 0));
 
-    statuses.forEach(status => stats.byStatus[status] = 0);
-    platforms.forEach(platform => stats.byPlatform[platform] = 0);
-
-    // Count prospects
-    this.prospects.forEach(prospect => {
-      stats.byStatus[prospect.estado]++;
-      stats.byPlatform[prospect.plataforma]++;
-      
-      const userId = prospect.assignedTo || 'unassigned';
-      stats.byUser[userId] = (stats.byUser[userId] || 0) + 1;
+    // Cuenta
+    all.forEach(p => {
+      stats.byStatus[p.estado]++;
+      stats.byPlatform[p.plataforma]++;
+      const u = p.assignedTo || 'unassigned';
+      stats.byUser[u] = (stats.byUser[u] || 0) + 1;
     });
 
     return stats;
   }
-}
-
-export const prospectService = new ProspectService();
+};
