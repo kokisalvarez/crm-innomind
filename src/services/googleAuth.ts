@@ -1,4 +1,10 @@
+// src/services/googleAuth.ts
+
 import { GoogleCredentials, GoogleTokens } from '../types/calendar';
+
+const CLIENT_ID     = import.meta.env.VITE_GOOGLE_CLIENT_ID!;
+const CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET!;
+const REDIRECT_URI  = import.meta.env.VITE_GOOGLE_REDIRECT_URI!;
 
 class GoogleAuthService {
   private credentials: GoogleCredentials;
@@ -6,24 +12,24 @@ class GoogleAuthService {
 
   constructor() {
     this.credentials = {
-      client_id: "881256214969-q8nmabf0mvm26pgaqskc9qh23rpkk9m8.apps.googleusercontent.com",
-      client_secret: "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",
-      redirect_uris: ["https://tu-app.bolt.new/auth/google/callback"],
-      project_id: "crm-innomind",
-      auth_uri: "https://accounts.google.com/o/oauth2/auth",
-      token_uri: "https://oauth2.googleapis.com/token"
+      client_id:     CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      redirect_uris: [REDIRECT_URI],
+      project_id:    'crm-innomind',
+      auth_uri:      'https://accounts.google.com/o/oauth2/auth',
+      token_uri:     'https://oauth2.googleapis.com/token',
     };
-    
+
     this.loadTokensFromStorage();
   }
 
   private loadTokensFromStorage(): void {
-    const storedTokens = localStorage.getItem('google_tokens');
-    if (storedTokens) {
+    const stored = localStorage.getItem('google_tokens');
+    if (stored) {
       try {
-        this.tokens = JSON.parse(storedTokens);
-      } catch (error) {
-        console.error('Error parsing stored tokens:', error);
+        this.tokens = JSON.parse(stored);
+      } catch {
+        console.error('Error parsing stored tokens');
         localStorage.removeItem('google_tokens');
       }
     }
@@ -43,44 +49,37 @@ class GoogleAuthService {
     ].join(' ');
 
     const params = new URLSearchParams({
-      client_id: this.credentials.client_id,
-      redirect_uri: this.credentials.redirect_uris[0],
-      scope: scopes,
+      client_id:     this.credentials.client_id,
+      redirect_uri:  this.credentials.redirect_uris[0],
+      scope:         scopes,
       response_type: 'code',
-      access_type: 'offline',
-      prompt: 'consent'
+      access_type:   'offline',
+      prompt:        'consent'
     });
 
     return `${this.credentials.auth_uri}?${params.toString()}`;
   }
 
   public async exchangeCodeForTokens(code: string): Promise<GoogleTokens> {
-    try {
-      const response = await fetch(this.credentials.token_uri, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: this.credentials.client_id,
-          client_secret: this.credentials.client_secret,
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: this.credentials.redirect_uris[0],
-        }),
-      });
+    const resp = await fetch(this.credentials.token_uri, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id:     this.credentials.client_id,
+        client_secret: this.credentials.client_secret,
+        code,
+        grant_type:    'authorization_code',
+        redirect_uri:  this.credentials.redirect_uris[0],
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`Token exchange failed: ${response.statusText}`);
-      }
-
-      const tokens: GoogleTokens = await response.json();
-      this.saveTokensToStorage(tokens);
-      return tokens;
-    } catch (error) {
-      console.error('Error exchanging code for tokens:', error);
-      throw error;
+    if (!resp.ok) {
+      throw new Error(`Token exchange failed: ${resp.statusText}`);
     }
+
+    const tokens: GoogleTokens = await resp.json();
+    this.saveTokensToStorage(tokens);
+    return tokens;
   }
 
   public async refreshAccessToken(): Promise<GoogleTokens> {
@@ -88,49 +87,39 @@ class GoogleAuthService {
       throw new Error('No refresh token available');
     }
 
-    try {
-      const response = await fetch(this.credentials.token_uri, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          client_id: this.credentials.client_id,
-          client_secret: this.credentials.client_secret,
-          refresh_token: this.tokens.refresh_token,
-          grant_type: 'refresh_token',
-        }),
-      });
+    const resp = await fetch(this.credentials.token_uri, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id:     this.credentials.client_id,
+        client_secret: this.credentials.client_secret,
+        refresh_token: this.tokens.refresh_token,
+        grant_type:    'refresh_token',
+      })
+    });
 
-      if (!response.ok) {
-        throw new Error(`Token refresh failed: ${response.statusText}`);
-      }
-
-      const newTokens = await response.json();
-      const updatedTokens: GoogleTokens = {
-        ...this.tokens,
-        access_token: newTokens.access_token,
-        expiry_date: Date.now() + (newTokens.expires_in * 1000),
-      };
-
-      this.saveTokensToStorage(updatedTokens);
-      return updatedTokens;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      throw error;
+    if (!resp.ok) {
+      throw new Error(`Token refresh failed: ${resp.statusText}`);
     }
+
+    const body = await resp.json();
+    const updated: GoogleTokens = {
+      ...this.tokens,
+      access_token: body.access_token,
+      expiry_date:  Date.now() + body.expires_in * 1000
+    };
+
+    this.saveTokensToStorage(updated);
+    return updated;
   }
 
   public async getValidAccessToken(): Promise<string> {
     if (!this.tokens) {
-      throw new Error('No tokens available. Please authenticate first.');
+      throw new Error('No tokens available. Authenticate first.');
     }
-
-    // Check if token is expired (with 5 minute buffer)
-    if (this.tokens.expiry_date && Date.now() > (this.tokens.expiry_date - 300000)) {
+    if (this.tokens.expiry_date && Date.now() > this.tokens.expiry_date - 300_000) {
       await this.refreshAccessToken();
     }
-
     return this.tokens.access_token;
   }
 

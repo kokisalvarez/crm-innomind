@@ -1,0 +1,18 @@
+{
+  "template": "bolt-vite-react-ts",
+  "modules": [
+    {
+      "name": "googleCalendar",
+      "provider": "google",
+      "config": {
+        "clientId":     "881256214969-q8nmabf0mvm26pgaqskc9qh23rpkk9m8.apps.googleusercontent.com",
+        "clientSecret": "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",
+        "redirectUri":  "https://tu-app.bolt.new/auth/google/callback",
+        "scopes": [
+          "https://www.googleapis.com/auth/calendar.events",
+          "https://www.googleapis.com/auth/calendar"
+        ]
+      }
+    }
+  ]
+}
