@@ -1,7 +1,6 @@
 // project/api/calendar/auth/callback.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { exchangeCodeAndStore } from '../../../lib/googleAuth';
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, error } = req.query as { code?: string; error?: string };
 
