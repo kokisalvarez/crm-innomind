@@ -1,8 +1,7 @@
 // project/api/calendar/sync.ts
 import { google } from 'googleapis';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-// Misma ruta: calendar → api, luego services
-import { getStoredTokens, syncEventsToFirestore } from '../services/googleAuth.js';
+import { getStoredTokens, syncEventsToFirestore } from '../../lib/googleAuth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

@@ -1,8 +1,7 @@
 // project/api/calendar/events.ts
 import { google } from 'googleapis';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-// Subimos de calendar → api, luego entramos a services
-import { getStoredTokens } from '../services/googleAuth.js';
+import { getStoredTokens } from '../../lib/googleAuth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {

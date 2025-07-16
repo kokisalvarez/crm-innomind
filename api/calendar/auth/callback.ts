@@ -1,7 +1,6 @@
 // project/api/calendar/auth/callback.ts
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { exchangeCodeAndStore }    from '../../services/googleAuth.js';
+import { exchangeCodeAndStore } from '../../../lib/googleAuth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { code, error } = req.query as { code?: string; error?: string };
@@ -14,10 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Intercambia y guarda directamente en el GET
     await exchangeCodeAndStore(code);
-    
-    // Devuelve un HTML con un link para volver a la aplicación
     return res.send(`
       <html>
         <body style="font-family: sans-serif; text-align: center; margin-top: 3rem;">

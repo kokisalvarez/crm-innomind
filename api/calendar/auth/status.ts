@@ -1,6 +1,6 @@
 // project/api/calendar/auth/status.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStoredTokens } from '../../services/googleAuth.js';
+import { getStoredTokens } from '../../../lib/googleAuth';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -10,7 +10,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const tokens = await getStoredTokens();
-    // connected = true si ya hay tokens guardados
     res.status(200).json({ connected: Boolean(tokens) });
   } catch (err: any) {
     console.error('Status error:', err);

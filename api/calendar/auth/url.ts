@@ -1,6 +1,7 @@
 // project/api/calendar/auth/url.ts
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAuthUrl } from '../../services/googleAuth.js';
+import { getAuthUrl } from '../../lib/googleAuth'; // ← Ajustado: apunta a lib, sin .js
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
