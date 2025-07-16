@@ -2,8 +2,7 @@
   "version": 2,
   "builds": [
     {
-      // En lugar de package.json, apuntas al config de Vite
-      "src": "vite.config.js",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
     },
