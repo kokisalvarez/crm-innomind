@@ -1,4 +1,4 @@
-// src/types/index.ts
+// project/src/types/index.ts
 
 // ——— Prospectos ———
 export type Platform = 'WhatsApp' | 'Instagram' | 'Facebook';
@@ -23,15 +23,26 @@ export interface Prospect {
   nombre: string;
   telefono: string;
   correo: string;
+
+  // Campos que creas en createProspect()
+  servicio: string;
+  origen: string;
+
   plataforma: Platform;
-  servicioInteres: string;
-  fechaContacto: Date;
   estado: ProspectStatus;
-  ultimoSeguimiento?: Date;
-  notasInternas: string;
   responsable: string;
+
+  // Timestamps
+  createdAt?: Date;
+  fechaContacto: Date;
+  ultimoSeguimiento?: Date;
+
+  // Historias y cotizaciones
   seguimientos: FollowUp[];
   cotizaciones: Quote[];
+
+  // Opcional: notas internas si luego las usas
+  notasInternas?: string;
 }
 
 // ——— Productos & Cotizaciones ———
@@ -92,36 +103,8 @@ export interface Quote {
   historialCambios: QuoteHistoryEntry[];
 }
 
-export interface QuoteTemplate {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  items: Omit<QuoteItem, 'id'>[];
-  condicionesPago: string;
-  notasAdicionales: string;
-  terminosCondiciones: string;
-  metodosPago: string[];
-  fechaCreacion: Date;
-  creadoPor: string;
-}
-
 // ——— Ajustes de la Compañía ———
-export interface CompanySettings {
-  nombre: string;
-  logo?: string;
-  direccion: string;
-  telefono: string;
-  correo: string;
-  sitioWeb: string;
-  rfc: string;
-  regimenFiscal: string;
-  iva: number;
-  condicionesPagoDefault: string;
-  terminosCondicionesDefault: string;
-  metodosPagoDefault: string[];
-  recordatoriosAutomaticos: boolean;
-  diasRecordatorio: number;
-}
+export interface CompanySettings { /* ... */ }
 
 // ——— Webhooks ———
 export interface WebhookData {
@@ -134,101 +117,20 @@ export interface WebhookData {
 }
 
 // ——— Dashboard CRM ———
-export interface DashboardMetrics {
-  totalProspectos: number;
-  prospectosPorPlataforma: Record<Platform, number>;
-  prospectosPorEstado: Record<ProspectStatus, number>;
-  cotizacionesGeneradas: number;
-  ventasCerradas: number;
-  tasaConversion: number;
-  cotizacionesPorEstado: Record<Quote['estado'], number>;
-  valorTotalCotizaciones: number;
-  tasaAceptacion: number;
-}
+export interface DashboardMetrics { /* ... */ }
 
 // ——— Usuarios y Permisos ———
 export type UserRole = 'admin' | 'manager' | 'agent' | 'viewer';
 export type UserStatus = 'active' | 'inactive' | 'pending' | 'suspended';
 
-export interface UserPermission {
-  modulo: string;
-  acciones: string[];
-}
-
-export interface UserSettings {
-  idioma: string;
-  timezone: string;
-  notificaciones: {
-    email: boolean;
-    push: boolean;
-    sms: boolean;
-  };
-  tema: 'light' | 'dark' | 'auto';
-}
-
-export interface UserStats {
-  prospectosManagedos: number;
-  cotizacionesCreadas: number;
-  ventasCerradas: number;
-  tasaConversion: number;
-  tiempoPromedioRespuesta: number;
-}
-
-export interface ActivityLog {
-  id: string;
-  fecha: Date;
-  accion: string;
-  modulo: string;
-  detalles: string;
-  ip?: string;
-  dispositivo?: string;
-}
-
-export interface User {
-  id: string;
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono?: string;
-  avatar?: string;
-  rol: UserRole;
-  estado: UserStatus;
-  fechaRegistro: Date;
-  ultimoAcceso?: Date;
-  departamento?: string;
-  cargo?: string;
-  permisos: UserPermission[];
-  configuracion: UserSettings;
-  estadisticas: UserStats;
-  historialActividad: ActivityLog[];
-}
-
-export interface UserInvitation {
-  id: string;
-  email: string;
-  rol: UserRole;
-  fechaInvitacion: Date;
-  fechaExpiracion: Date;
-  estado: 'pending' | 'accepted' | 'expired';
-  invitadoPor: string;
-  token: string;
-}
-
-export interface PasswordChangeRequest {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-export interface UserImportData {
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono?: string;
-  rol: UserRole;
-  departamento?: string;
-  cargo?: string;
-}
+export interface UserPermission { /* ... */ }
+export interface UserSettings { /* ... */ }
+export interface UserStats { /* ... */ }
+export interface ActivityLog { /* ... */ }
+export interface User { /* ... */ }
+export interface UserInvitation { /* ... */ }
+export interface PasswordChangeRequest { /* ... */ }
+export interface UserImportData { /* ... */ }
 
 // ——— Tipos de Finanzas ———
 export * from "./finance";

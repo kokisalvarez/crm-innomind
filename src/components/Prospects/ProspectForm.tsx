@@ -1,5 +1,19 @@
+// src/components/ProspectForm.tsx
+
 import React, { useState } from 'react';
-import { X, Save, User, Building, Phone, Mail, MapPin, Target, Calendar, Users, AlertCircle } from 'lucide-react';
+import {
+  X,
+  Save,
+  User,
+  Building,
+  Phone,
+  Mail,
+  MapPin,
+  Target,
+  Calendar,
+  Users,
+  AlertCircle
+} from 'lucide-react';
 import { useCRM } from '../../context/CRMContext';
 import { useUsers } from '../../context/UserContext';
 import { Platform, ProspectStatus } from '../../types';
@@ -10,23 +24,18 @@ interface ProspectFormProps {
 }
 
 interface FormData {
-  // Información obligatoria
   nombre: string;
   empresa: string;
   cargo: string;
   telefono: string;
   correo: string;
   origen: string;
-  
-  // Información opcional
   telefonoSecundario: string;
   direccion: string;
   industria: string;
   tamanoEmpresa: string;
   notasAdicionales: string;
   nivelInteres: 'Alto' | 'Medio' | 'Bajo';
-  
-  // Asignación
   responsable: string;
   estado: ProspectStatus;
   fechaProximoSeguimiento: string;
@@ -45,26 +54,25 @@ const ProspectForm: React.FC<ProspectFormProps> = ({ onClose, onSuccess }) => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   const [formData, setFormData] = useState<FormData>({
-    // Obligatorios
     nombre: '',
     empresa: '',
     cargo: '',
     telefono: '',
     correo: '',
     origen: '',
-    
-    // Opcionales
     telefonoSecundario: '',
     direccion: '',
     industria: '',
     tamanoEmpresa: '',
     notasAdicionales: '',
     nivelInteres: 'Medio',
-    
-    // Asignación
     responsable: 'Usuario Actual',
     estado: 'Nuevo',
-    fechaProximoSeguimiento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 días desde hoy
+    fechaProximoSeguimiento: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    )
+      .toISOString()
+      .split('T')[0],
     plataforma: 'WhatsApp',
     servicioInteres: ''
   });
@@ -113,51 +121,45 @@ const ProspectForm: React.FC<ProspectFormProps> = ({ onClose, onSuccess }) => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Validaciones obligatorias
     if (!formData.nombre.trim()) {
       newErrors.nombre = 'El nombre completo es requerido';
     }
-
     if (!formData.empresa.trim()) {
       newErrors.empresa = 'La empresa/organización es requerida';
     }
-
     if (!formData.cargo.trim()) {
       newErrors.cargo = 'El cargo/puesto es requerido';
     }
-
     if (!formData.telefono.trim()) {
       newErrors.telefono = 'El teléfono principal es requerido';
     } else if (!/^[\+]?[0-9\s\-\(\)]+$/.test(formData.telefono)) {
       newErrors.telefono = 'El formato del teléfono no es válido';
     }
-
     if (!formData.correo.trim()) {
       newErrors.correo = 'El correo electrónico es requerido';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
       newErrors.correo = 'El formato del correo no es válido';
     }
-
     if (!formData.origen) {
       newErrors.origen = 'El origen del prospecto es requerido';
     }
-
     if (!formData.servicioInteres.trim()) {
       newErrors.servicioInteres = 'El servicio de interés es requerido';
     }
-
-    // Validaciones opcionales
-    if (formData.telefonoSecundario && !/^[\+]?[0-9\s\-\(\)]+$/.test(formData.telefonoSecundario)) {
-      newErrors.telefonoSecundario = 'El formato del teléfono secundario no es válido';
+    if (
+      formData.telefonoSecundario &&
+      !/^[\+]?[0-9\s\-\(\)]+$/.test(formData.telefonoSecundario)
+    ) {
+      newErrors.telefonoSecundario =
+        'El formato del teléfono secundario no es válido';
     }
-
     if (formData.fechaProximoSeguimiento) {
       const fechaSeguimiento = new Date(formData.fechaProximoSeguimiento);
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
-      
       if (fechaSeguimiento < hoy) {
-        newErrors.fechaProximoSeguimiento = 'La fecha de seguimiento no puede ser anterior a hoy';
+        newErrors.fechaProximoSeguimiento =
+          'La fecha de seguimiento no puede ser anterior a hoy';
       }
     }
 
@@ -167,8 +169,6 @@ const ProspectForm: React.FC<ProspectFormProps> = ({ onClose, onSuccess }) => {
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -176,18 +176,12 @@ const ProspectForm: React.FC<ProspectFormProps> = ({ onClose, onSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
-
     try {
-      // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Crear el prospecto
       const prospectData = {
         nombre: formData.nombre.trim(),
         telefono: formData.telefono.trim(),
@@ -211,14 +205,8 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
       };
 
       addProspect(prospectData);
-
-      // Mostrar mensaje de éxito
       alert('✅ Prospecto creado exitosamente');
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-      
+      onSuccess?.();
       onClose();
     } catch (error) {
       console.error('Error al crear prospecto:', error);
@@ -228,24 +216,28 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
     }
   };
 
-  const getFieldError = (field: string) => {
-    return errors[field] ? (
+  const getFieldError = (field: string) =>
+    errors[field] ? (
       <div className="flex items-center mt-1 text-red-600 text-sm">
         <AlertCircle className="h-4 w-4 mr-1" />
         {errors[field]}
       </div>
     ) : null;
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
       <div className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-screen overflow-y-auto m-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h4 className="text-xl font-semibold text-gray-900">Crear Nuevo Prospecto</h4>
-            <p className="text-gray-600 mt-1">Registra un nuevo prospecto en el sistema CRM</p>
+            <h4 className="text-xl font-semibold text-gray-900">
+              Crear Nuevo Prospecto
+            </h4>
+            <p className="text-gray-600 mt-1">
+              Registra un nuevo prospecto en el sistema CRM
+            </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
@@ -260,8 +252,8 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
               <User className="h-5 w-5 mr-2 text-blue-600" />
               Información Obligatoria
             </h5>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Nombre */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nombre completo *
@@ -269,15 +261,19 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                 <input
                   type="text"
                   value={formData.nombre}
-                  onChange={(e) => handleInputChange('nombre', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('nombre', e.target.value)
+                  }
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                    errors.nombre ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.nombre
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-300'
                   }`}
                   placeholder="Ej: Juan Carlos Pérez"
                 />
                 {getFieldError('nombre')}
               </div>
-
+              {/* Empresa */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Empresa/Organización *
@@ -287,16 +283,20 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <input
                     type="text"
                     value={formData.empresa}
-                    onChange={(e) => handleInputChange('empresa', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('empresa', e.target.value)
+                    }
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.empresa ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      errors.empresa
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
                     }`}
                     placeholder="Ej: TechCorp S.A."
                   />
                 </div>
                 {getFieldError('empresa')}
               </div>
-
+              {/* Cargo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Cargo/Puesto *
@@ -304,15 +304,19 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                 <input
                   type="text"
                   value={formData.cargo}
-                  onChange={(e) => handleInputChange('cargo', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('cargo', e.target.value)
+                  }
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                    errors.cargo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.cargo
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-300'
                   }`}
                   placeholder="Ej: Gerente de Marketing"
                 />
                 {getFieldError('cargo')}
               </div>
-
+              {/* Teléfono */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Teléfono principal *
@@ -322,16 +326,20 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <input
                     type="tel"
                     value={formData.telefono}
-                    onChange={(e) => handleInputChange('telefono', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('telefono', e.target.value)
+                    }
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.telefono ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      errors.telefono
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
                     }`}
                     placeholder="+52 55 1234 5678"
                   />
                 </div>
                 {getFieldError('telefono')}
               </div>
-
+              {/* Correo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Correo electrónico *
@@ -341,30 +349,40 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <input
                     type="email"
                     value={formData.correo}
-                    onChange={(e) => handleInputChange('correo', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('correo', e.target.value)
+                    }
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.correo ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      errors.correo
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
                     }`}
                     placeholder="juan@empresa.com"
                   />
                 </div>
                 {getFieldError('correo')}
               </div>
-
+              {/* Origen */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Origen del prospecto *
                 </label>
                 <select
                   value={formData.origen}
-                  onChange={(e) => handleInputChange('origen', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('origen', e.target.value)
+                  }
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                    errors.origen ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.origen
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-300'
                   }`}
                 >
                   <option value="">Seleccionar origen</option>
-                  {origenOptions.map(origen => (
-                    <option key={origen} value={origen}>{origen}</option>
+                  {origenOptions.map(o => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
                   ))}
                 </select>
                 {getFieldError('origen')}
@@ -378,8 +396,8 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
               <Target className="h-5 w-5 mr-2 text-green-600" />
               Información Opcional
             </h5>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Teléfono secundario */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Teléfono secundario
@@ -389,55 +407,69 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <input
                     type="tel"
                     value={formData.telefonoSecundario}
-                    onChange={(e) => handleInputChange('telefonoSecundario', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('telefonoSecundario', e.target.value)
+                    }
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.telefonoSecundario ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      errors.telefonoSecundario
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
                     }`}
                     placeholder="+52 55 8765 4321"
                   />
                 </div>
                 {getFieldError('telefonoSecundario')}
               </div>
-
+              {/* Industria */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Industria/Sector
                 </label>
                 <select
                   value={formData.industria}
-                  onChange={(e) => handleInputChange('industria', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('industria', e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Seleccionar industria</option>
-                  {industriaOptions.map(industria => (
-                    <option key={industria} value={industria}>{industria}</option>
+                  {industriaOptions.map(i => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
                   ))}
                 </select>
               </div>
-
+              {/* Tamaño empresa */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tamaño de empresa
                 </label>
                 <select
                   value={formData.tamanoEmpresa}
-                  onChange={(e) => handleInputChange('tamanoEmpresa', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('tamanoEmpresa', e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Seleccionar tamaño</option>
-                  {tamanoEmpresaOptions.map(tamano => (
-                    <option key={tamano} value={tamano}>{tamano}</option>
+                  {tamanoEmpresaOptions.map(t => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </div>
-
+              {/* Nivel interés */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Nivel de interés
                 </label>
                 <select
                   value={formData.nivelInteres}
-                  onChange={(e) => handleInputChange('nivelInteres', e.target.value as 'Alto' | 'Medio' | 'Bajo')}
+                  onChange={e =>
+                    handleInputChange('nivelInteres', e.target.value as 'Alto' | 'Medio' | 'Bajo')
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Alto">🔥 Alto</option>
@@ -445,7 +477,7 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <option value="Bajo">❄️ Bajo</option>
                 </select>
               </div>
-
+              {/* Dirección */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Dirección
@@ -454,21 +486,25 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <MapPin className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
                   <textarea
                     value={formData.direccion}
-                    onChange={(e) => handleInputChange('direccion', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('direccion', e.target.value)
+                    }
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     rows={2}
                     placeholder="Dirección completa de la empresa"
                   />
                 </div>
               </div>
-
+              {/* Notas adicionales */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Notas adicionales
                 </label>
                 <textarea
                   value={formData.notasAdicionales}
-                  onChange={(e) => handleInputChange('notasAdicionales', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('notasAdicionales', e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows={3}
                   placeholder="Información adicional relevante sobre el prospecto..."
@@ -483,33 +519,37 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
               <Users className="h-5 w-5 mr-2 text-purple-600" />
               Asignación y Configuración
             </h5>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Responsable */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Vendedor/Ejecutivo responsable
                 </label>
                 <select
                   value={formData.responsable}
-                  onChange={(e) => handleInputChange('responsable', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('responsable', e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Seleccionar responsable</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.nombre} {user.apellido} - {user.email}
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.nombre} {u.apellido} - {u.email}
                     </option>
                   ))}
                 </select>
               </div>
-
+              {/* Estado */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Etapa del pipeline
                 </label>
                 <select
                   value={formData.estado}
-                  onChange={(e) => handleInputChange('estado', e.target.value as ProspectStatus)}
+                  onChange={e =>
+                    handleInputChange('estado', e.target.value as ProspectStatus)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Nuevo">🆕 Nuevo</option>
@@ -518,14 +558,16 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <option value="Cotizado">📋 Cotizado</option>
                 </select>
               </div>
-
+              {/* Plataforma */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Plataforma de contacto
                 </label>
                 <select
                   value={formData.plataforma}
-                  onChange={(e) => handleInputChange('plataforma', e.target.value as Platform)}
+                  onChange={e =>
+                    handleInputChange('plataforma', e.target.value as Platform)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="WhatsApp">💬 WhatsApp</option>
@@ -533,7 +575,7 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <option value="Facebook">📘 Facebook</option>
                 </select>
               </div>
-
+              {/* Fecha seguimiento */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Fecha de próximo seguimiento
@@ -543,15 +585,19 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                   <input
                     type="date"
                     value={formData.fechaProximoSeguimiento}
-                    onChange={(e) => handleInputChange('fechaProximoSeguimiento', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('fechaProximoSeguimiento', e.target.value)
+                    }
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                      errors.fechaProximoSeguimiento ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      errors.fechaProximoSeguimiento
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
                     }`}
                   />
                 </div>
                 {getFieldError('fechaProximoSeguimiento')}
               </div>
-
+              {/* Servicio */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Servicio de interés *
@@ -559,9 +605,13 @@ ${formData.notasAdicionales ? `Notas adicionales: ${formData.notasAdicionales}` 
                 <input
                   type="text"
                   value={formData.servicioInteres}
-                  onChange={(e) => handleInputChange('servicioInteres', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('servicioInteres', e.target.value)
+                  }
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors ${
-                    errors.servicioInteres ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.servicioInteres
+                      ? 'border-red-300 bg-red-50'
+                      : 'border-gray-300'
                   }`}
                   placeholder="Ej: Chatbot WhatsApp, CRM personalizado, Marketing digital..."
                 />

@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "**/*.ts", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/webhook",                "dest": "/api/webhook.ts" },
+    { "src": "/api/calendar/auth/url",      "dest": "/api/calendar/auth/url.ts" },
+    { "src": "/api/calendar/auth/callback", "dest": "/api/calendar/auth/callback.ts" },
+    { "src": "/api/calendar/auth/status",   "dest": "/api/calendar/auth/status.ts" },
+    { "src": "/api/calendar/events",        "dest": "/api/calendar/events.ts" },
+    { "src": "/api/calendar/sync",          "dest": "/api/calendar/sync.ts" },
+    { "src": "/api/(.*)",                   "dest": "/api/$1.ts" }
+  ]
+}
