@@ -1,10 +1,12 @@
 {
   "name": "whatsapp-crm",
+  "type": "commonjs",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:api\"",
+    "dev:frontend": "vite",
+    "dev:api": "vercel dev --listen 3000 --local-config api/vercel.json",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -12,6 +14,7 @@
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
+    "axios": "^1.10.0",
     "csv-parse": "^5.6.0",
     "date-fns": "^2.30.0",
     "firebase": "^11.10.0",
@@ -38,6 +41,7 @@
     "@vercel/node": "^5.3.4",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
+    "concurrently": "^9.2.0",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
@@ -49,3 +53,4 @@
     "vite": "^5.4.2"
   }
 }
+
