@@ -1,4 +1,10 @@
-import { User, UserImportData, UserRole, UserStatus, ActivityLog } from '../types/user';
+import type {
+  User,
+  UserImportData,
+  UserRole,
+  UserStatus,
+  ActivityLog
+} from '../src/types/user';
 import { authService } from './authService';
 
 class UserService {

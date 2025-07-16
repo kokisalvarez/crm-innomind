@@ -1,7 +1,7 @@
 // project/api/webhook.ts
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { prospectService } from './services/prospectService';
+import { prospectService } from '../lib/prospectService';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

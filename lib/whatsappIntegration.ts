@@ -1,6 +1,9 @@
-import { CalendarEvent } from '../types/calendar';
+// project/lib/tuArchivo.ts
+
+import type { CalendarEvent } from '../src/types/calendar';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+
 
 class WhatsAppIntegrationService {
   public generateEventMessage(event: CalendarEvent): string {

@@ -1,4 +1,4 @@
-// project/api/services/prospectService.ts
+// project/lib/prospectService.ts
 
 import { initializeApp, cert } from 'firebase-admin/app';
 import {
@@ -12,7 +12,7 @@ import type {
   FollowUp,
   ProspectStatus,
   Platform
-} from '../../src/types';  // desde project/api/services → subir dos niveles a src/types
+} from '../src/types';  // subimos un nivel (lib → project), luego entramos en src/types
 
 // 1) Validar vars de entorno
 const projectId     = process.env.FIRESTORE_PROJECT_ID;
