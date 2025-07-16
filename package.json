@@ -1,14 +1,14 @@
 {
   "name": "whatsapp-crm",
-  "type": "commonjs",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:api\"",
     "dev:frontend": "vite",
     "dev:api": "vercel dev --listen 3000 --local-config api/vercel.json",
     "build": "vite build",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
     "preview": "vite preview",
     "lint": "eslint .",
     "deploy": "vercel --prod"
@@ -54,4 +54,3 @@
     "vite": "^5.4.2"
   }
 }
-
