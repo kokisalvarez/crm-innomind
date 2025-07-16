@@ -2,7 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
+      // En lugar de package.json, apuntas al config de Vite
+      "src": "vite.config.js",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
     },
@@ -12,13 +13,7 @@
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/(.*)", "dest": "/api/$1.ts" },
+    { "src": "/(.*)",       "dest": "/index.html" }
   ]
 }

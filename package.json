@@ -8,7 +8,6 @@
     "dev:frontend": "vite",
     "dev:api": "vercel dev --listen 3000 --local-config api/vercel.json",
     "build": "vite build",
-    "vercel-build": "npm run build",
     "preview": "vite preview",
     "lint": "eslint .",
     "deploy": "vercel --prod"
